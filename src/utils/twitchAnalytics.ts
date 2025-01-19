@@ -18,9 +18,15 @@ export type TwitchUser = {
     created_at: string;
 };
 
-export type TwitchUserResponse = {
+export type TwitchStream = {
+    title: string;
+    user_name: string;
+};
+
+export type TwitchResponse = {
     status: number;
     user?: TwitchUser;
+    streams?: TwitchStream[];
 };
 
 var token: TwitchToken;
@@ -108,7 +114,7 @@ const validateToken = async (): Promise<boolean> => {
     }
 };
 
-const getUser = async (id: string): Promise<TwitchUserResponse> => {
+const getUser = async (id: string): Promise<TwitchResponse> => {
     const clientId = process.env.TWITCH_OAUTH_CLIENT_ID as string;
     const twitchApiUrl = process.env.TWITCH_API_URL as string;
 
@@ -126,7 +132,10 @@ const getUser = async (id: string): Promise<TwitchUserResponse> => {
         });
 
         if (!twitchResponse.ok) {
-            return { status: twitchResponse.status };
+            if (twitchResponse.status == HttpStatusCode.UNAUTHORIZED) {
+                return { status: HttpStatusCode.UNAUTHORIZED };
+            }
+            return { status: HttpStatusCode.INTERNAL_SERVER_ERROR };
         }
 
         const responseData = await twitchResponse.json();
@@ -142,4 +151,44 @@ const getUser = async (id: string): Promise<TwitchUserResponse> => {
     }
 };
 
-export default { getToken, initialize, getAccessToken, getUser };
+const getStreams = async (): Promise<TwitchResponse> => {
+    const clientId = process.env.TWITCH_OAUTH_CLIENT_ID as string;
+    const twitchApiUrl = process.env.TWITCH_API_URL as string;
+
+    try {
+        if (!validateToken()) {
+            return { status: HttpStatusCode.UNAUTHORIZED, user: undefined };
+        }
+
+        const twitchResponse = await fetch(`${twitchApiUrl}/streams`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${getAccessToken()}`,
+                "Client-Id": clientId,
+            },
+        });
+
+        if (!twitchResponse.ok) {
+            if (twitchResponse.status == HttpStatusCode.UNAUTHORIZED) {
+                return { status: HttpStatusCode.UNAUTHORIZED };
+            }
+            return { status: HttpStatusCode.INTERNAL_SERVER_ERROR };
+        }
+
+        const responseData = await twitchResponse.json();
+
+        if (!responseData?.data || !Array.isArray(responseData.data || responseData.data.length != 1)) {
+            return { status: HttpStatusCode.NOT_FOUND, streams: undefined };
+        }
+
+        const streams: TwitchStream[] = responseData.data.map(
+            (stream: any): TwitchStream => ({ title: stream.title, user_name: stream.user_name })
+        );
+
+        return { status: HttpStatusCode.OK, streams: streams };
+    } catch (error) {
+        return { status: HttpStatusCode.INTERNAL_SERVER_ERROR };
+    }
+};
+
+export default { getToken, initialize, getAccessToken, getUser, getStreams };

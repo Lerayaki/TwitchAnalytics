@@ -3,9 +3,8 @@ import { getUser } from "../controllers/user.controller";
 
 const UserRoute = () => {
     const router = Router();
-    const path = "/user";
 
-    router.get(`${path}`, getUser);
+    router.get("/user", getUser);
 
     return router;
 };
