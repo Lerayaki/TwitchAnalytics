@@ -1,16 +1,13 @@
 import { Request, Response } from "express";
 import { HttpStatusCode } from "../constants/httpStatusCode";
-import twitchAnalytics, { type TwitchResponse } from "../utils/twitchAnalytics";
-
-const isValidUserId = (id: string): boolean => {
-    return !!id && id.length < 11 && !isNaN(Number(id)) && Number(id) > 0;
-};
+import twitchAnalytics from "../utils/twitchAnalytics";
+import { type TwitchResponse } from "../models/twitchAnalytics.model";
 
 const getUser = async (request: Request, response: Response) => {
     try {
         const id = request.query.id as string;
 
-        if (!isValidUserId(id)) {
+        if (!twitchAnalytics.validateUserId(id)) {
             response.status(HttpStatusCode.BAD_REQUEST).json({ error: "Invalid or missing 'id' parameter." });
             return;
         }

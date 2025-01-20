@@ -1,33 +1,10 @@
 import { HttpStatusCode } from "../constants/httpStatusCode";
-
-export type TwitchToken = {
-    access_token: string;
-    expires_in: number;
-    token_type: string;
-};
-
-export type TwitchUser = {
-    id: string;
-    login: string;
-    display_name: string;
-    type: string;
-    broadcaster_type: string;
-    description: string;
-    profile_image_url: string;
-    offline_image_url: string;
-    created_at: string;
-};
-
-export type TwitchStream = {
-    title: string;
-    user_name: string;
-};
-
-export type TwitchResponse = {
-    status: number;
-    user?: TwitchUser;
-    streams?: TwitchStream[];
-};
+import {
+    type TwitchUser,
+    type TwitchResponse,
+    type TwitchStream,
+    type TwitchToken,
+} from "../models/twitchAnalytics.model";
 
 var token: TwitchToken;
 const getToken = (): TwitchToken => {
@@ -114,6 +91,10 @@ const validateToken = async (): Promise<boolean> => {
     }
 };
 
+const validateUserId = (id: string): boolean => {
+    return !!id && id.length < 11 && !isNaN(Number(id)) && Number(id) > 0;
+};
+
 const getUser = async (id: string): Promise<TwitchResponse> => {
     const clientId = process.env.TWITCH_OAUTH_CLIENT_ID as string;
     const twitchApiUrl = process.env.TWITCH_API_URL as string;
@@ -191,4 +172,4 @@ const getStreams = async (): Promise<TwitchResponse> => {
     }
 };
 
-export default { getToken, initialize, getAccessToken, getUser, getStreams };
+export default { getToken, initialize, getAccessToken, getUser, getStreams, validateUserId };

@@ -1,6 +1,7 @@
 import { Response, Request } from "express";
 import { HttpStatusCode } from "../constants/httpStatusCode";
-import twitchAnalytics, { type TwitchResponse } from "../utils/twitchAnalytics";
+import twitchAnalytics from "../utils/twitchAnalytics";
+import { type TwitchResponse } from "../models/twitchAnalytics.model";
 
 const getStreams = async (request: Request, response: Response) => {
     try {
